@@ -3,11 +3,13 @@ from telegram.ext import *
 import yt_dlp
 import os
 import json
+import tempfile
+import asyncio
 
 API_KEY = '7257917415:AAFiG2hzhrn8zvhf3VCfPCepi9Xcq6BiJ7M'
 USER_DATA_FILE = 'users.json'
 
-ADMIN_USER_ID = 167042775  # استبدل هذا بمعرف المستخدم الإداري الخاص بك
+ADMIN_USER_ID = 167042775  
 
 print("Bot started")
 
@@ -30,15 +32,15 @@ def save_user(user_id):
 async def download_video(url: str) -> str:
     ydl_opts = {
         'format': 'best',
-        'outtmpl': 'video.%(ext)s',
+        'outtmpl': os.path.join(tempfile.gettempdir(), 'video.%(ext)s'),
     }
     
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info_dict = ydl.extract_info(url, download=False)
             if info_dict:
-                ydl.download([url])
-                return 'video.mp4'
+                await asyncio.to_thread(ydl.download, [url])
+                return os.path.join(tempfile.gettempdir(), 'video.mp4')
     except yt_dlp.utils.DownloadError:
         return None
 
